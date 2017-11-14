@@ -3,10 +3,14 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
+//#include <limits.h>
 #include <linux/limits.h>
 
+#include "commands.h"
 #include "built_in.h"
+
 
 int do_cd(int argc, char** argv) {
   if (!validate_cd_argv(argc, argv))
@@ -33,11 +37,28 @@ int do_pwd(int argc, char** argv) {
 }
 
 int do_fg(int argc, char** argv) {
+  int status = 0;
   if (!validate_fg_argv(argc, argv))
     return -1;
 
   // TODO: Fill this.
-
+  if(bg_pid)
+  {
+    printf("%d running      ", bg_pid);
+    fflush(stdout); //print directly
+    for(int i=0; i<bg_argc; i++)
+    {
+        if(bg_argv[i])
+        {
+            printf("%s ",bg_argv[i]);
+            free(bg_argv[i]);
+        }
+    }
+    printf("\n");
+    free(bg_argv);
+    wait(&status);//pid(bg_pid, &status, WNOHANG);
+    bg_pid = 0;
+  }
   return 0;
 }
 
@@ -63,6 +84,6 @@ int validate_pwd_argv(int argc, char** argv) {
 int validate_fg_argv(int argc, char** argv) {
   if (argc != 1) return 0;
   if (strcmp(argv[0], "fg") != 0) return 0;
-  
+
   return 1;
 }
